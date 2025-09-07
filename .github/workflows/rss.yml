@@ -15,15 +15,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
-  run: pip install requests beautifulsoup4 feedparser
-  
+        run: pip install requests beautifulsoup4 feedparser
 
       - name: Run script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: python jagran_telegram.py
+        
         
