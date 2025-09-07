@@ -18,7 +18,8 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+  run: pip install requests beautifulsoup4 feedparser
+  
 
       - name: Run script
         env:
