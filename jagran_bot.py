@@ -1,12 +1,11 @@
 import os
+import json
 import feedparser
 import requests
 
-# Secrets से config
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHANNEL_ID = os.environ["CHANNEL_ID"]
 
-# Jagran Hindi RSS Feeds
 RSS_FEEDS = {
     "राष्ट्रीय": "https://www.jagran.com/rss/hindi-news/national-news.xml",
     "अंतर्राष्ट्रीय": "https://www.jagran.com/rss/hindi-news/international-news.xml",
@@ -20,7 +19,6 @@ RSS_FEEDS = {
     "धर्म": "https://www.jagran.com/rss/hindi-news/religion-news.xml"
 }
 
-# Category logos (repo ke andar "logos" folder me save honge)
 CATEGORY_LOGOS = {
     "राष्ट्रीय": "logos/national.png",
     "अंतर्राष्ट्रीय": "logos/international.png",
@@ -34,6 +32,18 @@ CATEGORY_LOGOS = {
     "धर्म": "logos/religion.png"
 }
 
+SENT_FILE = "sent.json"
+
+def load_sent():
+    if os.path.exists(SENT_FILE):
+        with open(SENT_FILE, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    return set()
+
+def save_sent(sent_ids):
+    with open(SENT_FILE, "w", encoding="utf-8") as f:
+        json.dump(list(sent_ids), f, ensure_ascii=False, indent=2)
+
 def send_to_telegram(category, title, link):
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
     caption = f"📰 <b>{category}</b>\n\n{title}\n\n🔗 {link}"
@@ -45,16 +55,24 @@ def send_to_telegram(category, title, link):
             data = {"chat_id": CHANNEL_ID, "caption": caption, "parse_mode": "HTML"}
             requests.post(url, data=data, files=files)
     else:
-        # अगर logo ना मिले तो सिर्फ text भेजें
         url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
         data = {"chat_id": CHANNEL_ID, "text": caption, "parse_mode": "HTML"}
         requests.post(url, data=data)
 
 def check_news():
+    sent_ids = load_sent()
+    new_sent = set(sent_ids)
+
     for category, feed_url in RSS_FEEDS.items():
         feed = feedparser.parse(feed_url)
-        for entry in feed.entries[:3]:  # हर बार सिर्फ top 3 नई news
-            send_to_telegram(category, entry.title, entry.link)
+        for entry in feed.entries[:5]:  # latest 5 check करें
+            news_id = entry.id if "id" in entry else entry.link
+            if news_id not in sent_ids:   # केवल नई news भेजें
+                send_to_telegram(category, entry.title, entry.link)
+                new_sent.add(news_id)
+
+    save_sent(new_sent)
 
 if __name__ == "__main__":
     check_news()
+    
