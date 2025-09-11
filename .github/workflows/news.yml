@@ -2,39 +2,50 @@ name: Jagran Telegram Bot
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # हर 5 मिनट में run होगा
+    # हर 5 मिनट पर रन होगा
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
 
+    steps:
+      # Repo checkout
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # पिछले रन की sent.json restore करो (अगर exist करता है)
       - name: Restore sent.json
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: sent-news
-          path: .
+          path: sent.json
+        continue-on-error: true   # error avoid करेगा अगर पहली बार file न मिले
 
+      # Python setup
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
+      # Dependencies install
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install feedparser requests
 
+      # Script run
       - name: Run script
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: python jagran_bot.py
 
+      # नई sent.json save करो
       - name: Save sent.json
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sent-news
           path: sent.json
+          
