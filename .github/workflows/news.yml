@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Repo checkout
+      # Repo checkout (latest v4)
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -21,9 +21,9 @@ jobs:
         with:
           name: sent-news
           path: sent.json
-        continue-on-error: true   # error avoid करेगा अगर पहली बार file न मिले
+        continue-on-error: true   # अगर file न मिले तो error ignore
 
-      # Python setup
+      # Python setup (latest v5)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -42,7 +42,7 @@ jobs:
           CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
         run: python jagran_bot.py
 
-      # नई sent.json save करो
+      # नई sent.json save करो (latest v4)
       - name: Save sent.json
         uses: actions/upload-artifact@v4
         with:
